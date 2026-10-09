@@ -7,7 +7,7 @@
     <style>
       body {
         margin: 0;
-        min-width: 220px;
+        min-width: 240px;
         padding: 16px;
         font-family: Arial, "Microsoft YaHei", sans-serif;
         background: #ffffff;
@@ -17,6 +17,51 @@
       h1 {
         margin: 0 0 14px;
         font-size: 16px;
+      }
+
+      .switch-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 13px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .switch-row input {
+        display: none;
+      }
+
+      .switch-row .switch {
+        width: 34px;
+        height: 18px;
+        border-radius: 9px;
+        background: #c9cdd4;
+        position: relative;
+        transition: background 0.2s;
+        flex: none;
+      }
+
+      .switch-row .switch:after {
+        content: "";
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #ffffff;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.2s;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.24);
+      }
+
+      .switch-row input:checked + .switch {
+        background: #1677ff;
+      }
+
+      .switch-row input:checked + .switch:after {
+        transform: translateX(16px);
       }
 
       button {
@@ -51,6 +96,11 @@
   </head>
   <body>
     <h1>乐仓原型</h1>
+    <label class="switch-row">
+      <input id="show-panel" type="checkbox" />
+      <span class="switch"></span>
+      <span>显示原型浮窗</span>
+    </label>
     <button id="refresh-page" type="button">重新加载插件并刷新页面</button>
     <p id="status" aria-live="polite"></p>
   </body>

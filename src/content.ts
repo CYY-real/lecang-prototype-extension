@@ -8,6 +8,9 @@
       get(keys: string | Record<string, unknown>): Promise<Record<string, unknown>>
       set(items: Record<string, unknown>): Promise<void>
     }
+    onChanged: {
+      addListener(callback: (changes: Record<string, { newValue?: unknown; oldValue?: unknown }>, areaName: string) => void): void
+    }
   }
 }
 
@@ -36,6 +39,9 @@ type MountedPrototype = {
 
 let mounted: MountedPrototype | null = null
 
+const SHOW_KEY = 'lecang-prototype:showPanel'
+let showPanel = false
+
 function setOpen(open: boolean) {
   if (!mounted) return
   mounted.frameWrap.hidden = !open
@@ -46,8 +52,10 @@ function setOpen(open: boolean) {
 function positionFrame(frameWrap: HTMLElement) {
   const minLeft = 208
   const minTop = 44
-  const maxLeft = Math.max(minLeft, window.innerWidth - 360)
-  const maxTop = Math.max(minTop, window.innerHeight - 200)
+  const width = frameWrap.offsetWidth
+  const height = frameWrap.offsetHeight
+  const maxLeft = Math.max(minLeft, window.innerWidth - width - 8)
+  const maxTop = Math.max(minTop, window.innerHeight - height - 8)
   const left = Math.min(Math.max(minLeft, frameWrap.offsetLeft || minLeft), maxLeft)
   const top = Math.min(Math.max(minTop, frameWrap.offsetTop || minTop), maxTop)
   frameWrap.style.left = `${left}px`
@@ -94,10 +102,13 @@ function mountPrototype(route: PrototypeRoute) {
     .launcher[hidden] { display: none; }
     .frame-wrap {
       position: fixed; z-index: 2147483645;
-      left: 208px; right: 0; top: 44px; bottom: 0;
+      width: min(600px, calc(100vw - 224px));
+      left: 208px; top: 44px;
       display: flex; flex-direction: column;
       background: #fff;
-      border-left: 1px solid #d7e2f0;
+      border: 1px solid #d7e2f0; border-radius: 4px;
+      box-shadow: 0 6px 18px rgba(15, 30, 51, 0.18);
+      max-height: calc(100vh - 88px);
     }
     .frame-wrap[hidden] { display: none; }
     .frame-header {
@@ -171,6 +182,7 @@ function mountPrototype(route: PrototypeRoute) {
 }
 
 function syncPrototype() {
+  if (!showPanel) return
   const route = prototypeRoutes.find((item) => item.matches())
   if (mounted && mounted.id === route?.id) return
   mounted?.host.remove()
@@ -191,7 +203,23 @@ window.addEventListener('resize', () => {
   if (mounted && !mounted.frameWrap.hidden) positionFrame(mounted.frameWrap)
 })
 new MutationObserver(scheduleSync).observe(document.documentElement, { childList: true, subtree: true })
-syncPrototype()
+
+// ---------- 浮窗显示开关：由插件 popup 控制，开启才显示 ----------
+async function initShowPanel(): Promise<void> {
+  const stored = await chrome.storage.local.get(SHOW_KEY)
+  showPanel = Boolean(stored[SHOW_KEY])
+  syncPrototype()
+}
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local' || !(SHOW_KEY in changes)) return
+  showPanel = Boolean(changes[SHOW_KEY].newValue)
+  if (showPanel) syncPrototype()
+  else {
+    mounted?.host.remove()
+    mounted = null
+  }
+})
+void initShowPanel()
 
 // ---------- 真实接口桥：iframe 内原型通过本 content script 在页面上下文发起请求 ----------
 // iframe 是 chrome-extension:// origin，跨域且不带业务 cookie，故由本脚本（同源页面上下文）代发。
