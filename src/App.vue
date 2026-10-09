@@ -79,7 +79,7 @@ const total = ref(0)
 const loading = ref(false)
 const filters = reactive({ username: '', nickName: '', jobNumber: '', userType: '', roleName: '', deleted: '' })
 const page = ref(1)
-const pageSize = ref(10)
+const pageSize = ref(20)
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
 
@@ -373,7 +373,16 @@ async function toggle(row: UserRow) {
   }
 }
 
-const roleSelectOptions = computed(() => roles.value.map(r => ({ value: r.id, label: r.roleName, group: r.flag === undefined ? undefined : (Number(r.flag) === 1 ? 'WMS 仓库角色' : 'GDAWS 系统角色') })))
+const roleSelectOptions = computed(() => roles.value.map(r => {
+  const bindingHints: string[] = []
+  if (r.saleAreaFlag) bindingHints.push('需绑定区域')
+  return {
+    value: r.id,
+    label: r.roleName,
+    hint: bindingHints.join(' · ') || undefined,
+    group: r.flag === undefined ? undefined : (Number(r.flag) === 1 ? 'WMS 仓库角色' : 'GDAWS 系统角色'),
+  }
+}))
 const dataSelectOptions = computed(() => dataPerms.value.map(d => ({ value: d.id, label: d.name })))
 const groupSelectOptions = computed(() => newDataPermGroups.value.map(g => ({ value: g.id, label: g.name })))
 const warehouseSelectOptions = computed(() => Array.from(new Set([...warehouseCodes.value, ...form.warehouseList])).map(w => ({ value: w, label: w })))
@@ -508,10 +517,10 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <div class="form-grid">
-          <div class="permission-field required"><span>角色：</span><PermissionSelect v-model="form.roleIds" :options="roleSelectOptions" multiple clearable dialog :disabled="isView" label="角色" /></div>
-          <div v-if="showAreas" class="permission-field required"><span>绑定区域：<em class="field-tip">（所选角色需限定区域）</em></span><PermissionSelect v-model="form.saleAreaCodes" :options="areaOptions" multiple clearable :disabled="isView || areaLoading" label="绑定区域" /><small v-if="areaLoading" class="field-state">区域选项加载中…</small><small v-else-if="areaLoadError" class="field-state error">{{ areaLoadError }}</small></div>
-          <div v-if="showWarehouses" class="permission-field required"><span>绑定仓库：<em class="field-tip">（所选角色需限定仓库）</em></span><PermissionSelect v-model="form.warehouseList" :options="warehouseSelectOptions" multiple clearable dialog :disabled="isView" label="绑定仓库" /></div>
-          <div class="permission-field"><span>数据权限：</span><PermissionSelect v-model="form.dataPermissionIds" :options="dataSelectOptions" multiple clearable dialog :disabled="isView" label="数据权限" /></div>
+          <div class="permission-field required"><span>角色：</span><PermissionSelect v-model="form.roleIds" :options="roleSelectOptions" multiple clearable dialog :disabled="isView" label="角色" :group-hints="{ 'WMS 仓库角色': '该分类下角色均需绑定仓库' }" /></div>
+          <div v-if="showAreas" class="permission-field required"><span>绑定区域：</span><PermissionSelect v-model="form.saleAreaCodes" :options="areaOptions" multiple clearable :disabled="isView || areaLoading" label="绑定区域" /><small v-if="areaLoading" class="field-state">区域选项加载中…</small><small v-else-if="areaLoadError" class="field-state error">{{ areaLoadError }}</small></div>
+          <div v-if="showWarehouses" class="permission-field required"><span>绑定仓库：<em class="field-tip"> 仅在WMS端生效</em></span><PermissionSelect v-model="form.warehouseList" :options="warehouseSelectOptions" multiple clearable dialog :disabled="isView" label="绑定仓库" /></div>
+          <div class="permission-field"><span>数据权限：<em class="field-tip"> 仅在GDAWS端生效</em></span><PermissionSelect v-model="form.dataPermissionIds" :options="dataSelectOptions" multiple clearable dialog :disabled="isView" label="数据权限" /></div>
           <div class="permission-field"><span>NEW数据权限：</span><PermissionSelect :model-value="form.groupId" :options="groupSelectOptions" clearable placement="up" :disabled="isView" label="NEW数据权限" @update:model-value="form.groupId = $event as number | null" /></div>
         </div></section><p v-if="formError" class="form-error" role="alert">{{ formError }}</p>
       </div>

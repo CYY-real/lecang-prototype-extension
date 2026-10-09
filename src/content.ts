@@ -1,7 +1,7 @@
 ﻿declare const chrome: {
   runtime: {
     getURL(path: string): string
-    reload(): void
+    sendMessage(message: unknown): Promise<unknown>
   }
   storage: {
     local: {
@@ -337,6 +337,7 @@ window.addEventListener('message', (event: MessageEvent) => {
 // 免去同事在 chrome://extensions 手动刷新。发布新版本时务必同步更新 version.json。
 const VERSION_URL = chrome.runtime.getURL('version.json')
 const VERSION_KEY = 'lecang-prototype:version'
+const RELOAD_MESSAGE = 'lecang-prototype:reload'
 
 async function autoReloadCheck(): Promise<void> {
   try {
@@ -346,8 +347,12 @@ async function autoReloadCheck(): Promise<void> {
     const stored = await chrome.storage.local.get(VERSION_KEY)
     const prev = (stored[VERSION_KEY] as string | undefined) || ''
     if (prev && text !== prev) {
+      // 先记录已发现的新版本，避免重载后的 content script 再次把同一版本判定为更新。
+      await chrome.storage.local.set({ [VERSION_KEY]: text })
       // 等 git pull 写完文件再重载，避免加载半成品
-      window.setTimeout(() => chrome.runtime.reload(), 3000)
+      window.setTimeout(() => {
+        void chrome.runtime.sendMessage({ type: RELOAD_MESSAGE }).catch(() => {})
+      }, 3000)
       return
     }
     if (!prev || text !== prev) {

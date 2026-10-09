@@ -17,9 +17,10 @@ export default defineConfig({
         index: fileURLToPath(new URL('./index.html', import.meta.url)),
         popup: fileURLToPath(new URL('./popup.html', import.meta.url)),
         content: fileURLToPath(new URL('./src/content.ts', import.meta.url)),
+        background: fileURLToPath(new URL('./src/background.ts', import.meta.url)),
       },
       output: {
-        entryFileNames: (chunk) => chunk.name === 'content' ? 'content.js' : 'assets/[name]-[hash].js',
+        entryFileNames: (chunk) => ['content', 'background'].includes(chunk.name) ? '[name].js' : 'assets/[name]-[hash].js',
       },
     },
   },

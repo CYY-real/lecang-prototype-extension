@@ -1,0 +1,1 @@
+var e=`lecang-prototype:reload`;chrome.runtime.onMessage.addListener(t=>{t?.type===e&&chrome.runtime.reload()});

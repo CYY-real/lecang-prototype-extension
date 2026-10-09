@@ -2,8 +2,11 @@
   "manifest_version": 3,
   "name": "乐仓新客户端原型",
   "description": "在乐仓系统页面中展示新客户端原型。",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "permissions": ["tabs", "scripting", "activeTab", "storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_title": "乐仓原型",
     "default_popup": "popup.html"
@@ -17,7 +20,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["index.html", "assets/*"],
+      "resources": ["index.html", "version.json", "assets/*"],
       "matches": ["https://*.lecangs.com/*", "http://*.lecangs.com/*", "http://localhost/*", "http://127.0.0.1/*"]
     }
   ]

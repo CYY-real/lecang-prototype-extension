@@ -2,7 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 type Value = string | number
-type Option = { value: Value; label: string; group?: string }
+type Option = { value: Value; label: string; group?: string; hint?: string }
 const props = withDefaults(defineProps<{
   modelValue: Value[] | Value | null
   options: Option[]
@@ -13,7 +13,8 @@ const props = withDefaults(defineProps<{
   placement?: 'down' | 'up'
   maxTag?: number
   dialog?: boolean
-}>(), { multiple: false, clearable: false, disabled: false, placement: 'down', maxTag: 999, dialog: false })
+  groupHints?: Record<string, string>
+}>(), { multiple: false, clearable: false, disabled: false, placement: 'down', maxTag: 999, dialog: false, groupHints: () => ({}) })
 const emit = defineEmits<{ 'update:modelValue': [value: Value[] | Value | null] }>()
 const root = ref<HTMLElement | null>(null)
 const searchInput = ref<HTMLInputElement | null>(null)
@@ -104,6 +105,7 @@ onBeforeUnmount(() => { document.removeEventListener('pointerdown', outside); wi
       <div v-if="grouped" class="pop-tabs">
         <button v-for="g in groupNames" :key="g" type="button" :class="{ active: activeGroup === g }" @click="activeGroup = g">{{ g }}</button>
       </div>
+      <div v-if="grouped && groupHints?.[activeGroup]" class="pop-group-hint">{{ groupHints[activeGroup] }}</div>
       <button v-for="option in filtered" :key="option.value" type="button" class="pop-item" :class="{ selected: multiple ? tempSelected.includes(option.value) : selected[0] === option.value }" @mousedown.prevent @click="chooseSmall(option.value)">
         {{ option.label }}<span v-if="multiple ? tempSelected.includes(option.value) : selected[0] === option.value">✓</span>
       </button>
@@ -125,12 +127,13 @@ onBeforeUnmount(() => { document.removeEventListener('pointerdown', outside); wi
           <div v-if="grouped" class="picker-tabs">
             <button v-for="g in groupNames" :key="g" type="button" :class="{ active: activeGroup === g }" @click="activeGroup = g">{{ g }}</button>
           </div>
+          <div v-if="grouped && groupHints?.[activeGroup]" class="picker-group-hint">{{ groupHints[activeGroup] }}</div>
           <div class="picker-search"><input v-model="search" placeholder="搜索…" autocomplete="off"></div>
           <div class="picker-list">
             <label v-for="option in filtered" :key="option.value" class="picker-item" :class="{ checked: multiple ? tempSelected.includes(option.value) : selected[0] === option.value }" @click="multiple ? null : chooseSmall(option.value)">
               <input v-if="multiple" type="checkbox" :checked="tempSelected.includes(option.value)" @change="toggleOption(option.value)">
               <input v-else type="radio" :checked="selected[0] === option.value" @change="chooseSmall(option.value)">
-              <span>{{ option.label }}</span>
+              <span class="option-main"><span>{{ option.label }}</span><small v-if="option.hint" class="option-hint">{{ option.hint }}</small></span>
             </label>
             <div v-if="!filtered.length" class="picker-empty">暂无数据</div>
           </div>
@@ -185,6 +188,8 @@ onBeforeUnmount(() => { document.removeEventListener('pointerdown', outside); wi
 .picker-tabs { display: flex; border-bottom: 1px solid #f0f0f0; background: #fafafa; }
 .picker-tabs button { flex: 1; padding: 8px; border: 0; background: transparent; font-size: 13px; color: #595959; cursor: pointer; border-bottom: 2px solid transparent; }
 .picker-tabs button.active { color: #1677ff; font-weight: 600; border-bottom-color: #1677ff; background: #fff; }
+.pop-group-hint { padding: 6px 10px; color: #8a94a6; font-size: 12px; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
+.picker-group-hint { padding: 6px 16px; color: #8a94a6; font-size: 12px; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
 .picker-search { padding: 8px 16px; border-bottom: 1px solid #f0f0f0; }
 .picker-search input { width: 100%; height: 30px; padding: 0 8px; border: 1px solid #d5d9e0; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
 .picker-search input:focus { outline: none; border-color: #1677ff; }
@@ -193,6 +198,8 @@ onBeforeUnmount(() => { document.removeEventListener('pointerdown', outside); wi
 .picker-item:hover { background: #f5f5ff; }
 .picker-item.checked { background: #f0f5ff; color: #1d39c4; }
 .picker-item input { margin: 0; }
+.picker-item > .option-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; flex: 1; min-width: 0; }
+.option-hint { flex: none; color: #8a94a6; font-size: 11px; font-weight: 400; }
 .picker-empty { padding: 24px; text-align: center; color: #9ca3af; font-size: 13px; }
 .picker-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px; border-top: 1px solid #f0f0f0; }
 .picker-btn { padding: 6px 16px; border: 1px solid #d5d9e0; border-radius: 4px; background: #fff; font-size: 13px; cursor: pointer; color: #374151; }

@@ -6,9 +6,9 @@
 
 ## 代码结构
 
-- `src/`：源码（`content.ts` 页面注入脚本、`App.vue` 原型界面、`PermissionSelect.vue` 权限选择器）
-- `dist/`：构建产物，Chrome 加载的就是这个目录（本项目无 package.json，产物由人工同步）
-- `version.json`（在 `dist/` 内）：版本标识，**自动重载机制依赖它**，每次发布新版本务必更新此文件
+- `src/`：源码（`content.ts` 页面注入脚本、`background.ts` 自动重载后台、`App.vue` 原型界面、`PermissionSelect.vue` 权限选择器）
+- `dist/`：构建产物，Chrome 加载的就是这个目录
+- `public/version.json`：版本标识的源文件，构建时自动复制到 `dist/version.json`；**自动重载机制依赖它**，每次发布新版本务必更新
 
 ## 环境切换
 
@@ -26,12 +26,12 @@
 4. 打开乐仓系统 `/setting/user` 页面，右下角出现「P」按钮即可使用
 
 **日常更新（同事侧）**
-- 双击仓库目录下的 `update.bat`（自动 `git pull`），插件检测到 `dist/version.json` 变化后 **15 秒内自动重载**，无需再碰 chrome://extensions
+- 双击仓库目录下的 `update.bat`（自动 `git pull`），插件检测到 `dist/version.json` 变化后 **约 18 秒内自动重载**，无需再碰 chrome://extensions
 - 也可手动在仓库目录执行 `git pull`，效果相同
 
 **发布新版本（维护者侧）**
-1. 修改 `src/` 源码并同步 `dist/` 产物（含 `dist/manifest.json` 等）
-2. **更新 `dist/version.json`**（例如 `{"version":"0.7.0","build":"20261020-1"}`）——不更新它同事不会收到重载
+1. 修改 `src/` 源码，并**更新 `public/version.json`**（例如 `{"version":"0.7.0","build":"20261020-1"}`）——不更新它同事不会收到重载
+2. 从仓库根目录运行 `npm run extension:build`，生成包含 `dist/version.json`、`dist/manifest.json` 等文件的完整产物
 3. 运行发布脚本（公司网络下 `git push` 会被劫持到内部 GitLab，故用 GitHub API 发布）：
    ```powershell
    $env:GITHUB_TOKEN="你的token"
@@ -57,7 +57,7 @@
 
 ## 自动重载原理
 
-`dist/content.js` 每 15 秒读取自身包内 `version.json` 并与 `chrome.storage.local` 中上次记录对比；发现内容变化后延迟 3 秒调用 `chrome.runtime.reload()` 重载整个扩展，使新代码立即生效。因此发布时改 `version.json` 是关键步骤。
+`dist/content.js` 每 15 秒读取自身包内 `version.json` 并与 `chrome.storage.local` 中上次记录对比；发现内容变化后先保存新版本，再延迟 3 秒通知 `dist/background.js` 重载整个扩展，使新代码立即生效，并避免同一版本循环重载。因此发布时改 `public/version.json` 并重新构建是关键步骤。
 
 ## 本地构建/预览
 
@@ -71,5 +71,5 @@ npm run extension:build
 
 ## 注意
 
-- `dist/version.json` 是自动重载的触发文件，与 `manifest.json` 的 `version` 字段是两回事，发布时两者都要维护。
+- `dist/version.json` 是自动重载的触发文件，由 `public/version.json` 构建生成；它与 `manifest.json` 的 `version` 字段是两回事，发布时两者都要维护。
 - 私钥/访问令牌不要提交进仓库。
