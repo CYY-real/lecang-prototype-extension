@@ -22,6 +22,9 @@
 三、常见问题
 - 找不到「开发者模式」：确认访问的是扩展管理页 chrome://extensions
 - clone 报错（没有权限/404）：说明还没被加为仓库协作者，找维护者
+- clone 报 SSL certificate problem（证书错误）：先执行一次
+  git config --global http.sslverify false
+  再重新 clone（公司网络代理环境的常见处理）
 - 双击 update.bat 提示拉取失败：确认网络正常、账号密码正确
 - 加载后没有反应：确认插件列表里状态是「已启用」，然后刷新乐仓页面
 
