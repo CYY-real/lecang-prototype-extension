@@ -1,0 +1,28 @@
+乐仓原型浏览器插件 - 安装与更新说明（GitHub 私有仓库版）
+========================================================
+
+一、首次安装（只需要做一次）
+1. 电脑安装 Git：https://git-scm.com/download/win ，一路下一步即可
+2. 让维护者把你加为 GitHub 仓库协作者
+   （仓库：CYY-real/lecang-prototype-extension，Settings → Collaborators）
+3. 打开命令行（Win+R 输入 cmd），执行：
+   git clone https://github.com/CYY-real/lecang-prototype-extension.git
+   输入你的 GitHub 账号密码（或密钥）完成拉取
+4. 浏览器地址栏输入 chrome://extensions 并回车
+5. 打开右上角「开发者模式」开关
+6. 点击左上角「加载已解压的扩展程序」，选择刚才 clone 下来的文件夹里的「dist」文件夹
+7. 打开乐仓系统 /setting/user 页面，右下角出现「P」圆形按钮即安装成功
+
+二、以后每次更新（维护者发新版本后）
+1. 找到 clone 下来的仓库文件夹，双击里面的「update.bat」
+   （如果提示输入账号密码，输入你的 GitHub 账号即可）
+2. 插件会在几秒内自动重新加载，自动生效
+   —— 不用再打开 chrome://extensions，不用重新安装
+
+三、常见问题
+- 找不到「开发者模式」：确认访问的是扩展管理页 chrome://extensions
+- clone 报错（没有权限/404）：说明还没被加为仓库协作者，找维护者
+- 双击 update.bat 提示拉取失败：确认网络正常、账号密码正确
+- 加载后没有反应：确认插件列表里状态是「已启用」，然后刷新乐仓页面
+
+版本：0.6.1（2026-10-09）
