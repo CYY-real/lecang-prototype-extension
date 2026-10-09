@@ -32,8 +32,15 @@
 **发布新版本（维护者侧）**
 1. 修改 `src/` 源码并同步 `dist/` 产物（含 `dist/manifest.json` 等）
 2. **更新 `dist/version.json`**（例如 `{"version":"0.7.0","build":"20261020-1"}`）——不更新它同事不会收到重载
-3. `git add -A && git commit -m "v0.7.0" && git push`
+3. 运行发布脚本（公司网络下 `git push` 会被劫持到内部 GitLab，故用 GitHub API 发布）：
+   ```powershell
+   $env:GITHUB_TOKEN="你的token"
+   node api-push.cjs
+   ```
+   脚本会把全部文件以一次 commit 同步到 `main`（保持线性历史）
 4. 同事双击 `update.bat` 即可，全自动
+
+> 提示：`api-push.cjs` 通过 GitHub Git Data API 推送，不依赖 git push，token 只从环境变量读取、不会写进文件或仓库。
 
 ## 自动重载原理
 
