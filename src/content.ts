@@ -108,9 +108,11 @@ function mountPrototype(route: PrototypeRoute) {
       font: 12px Arial, "Microsoft YaHei", sans-serif; font-weight: 400; color: #1677ff;
     }
     .frame-close {
+      display: inline-flex; align-items: center; gap: 4px;
       height: 32px; padding: 0 12px; border: 1px solid #d5d9e0; border-radius: 4px; background: #fff; color: #526b8e;
       font-size: 13px; cursor: pointer; white-space: nowrap; line-height: 30px;
     }
+    .frame-close svg { flex: none; }
     .frame-close:hover { color: #244570; }
     .frame-body {
       flex: 1; min-height: 0; display: flex; flex-direction: column;
@@ -139,8 +141,15 @@ function mountPrototype(route: PrototypeRoute) {
   const close = document.createElement('button')
   close.type = 'button'
   close.className = 'frame-close'
-  close.textContent = '退出原型'
   close.setAttribute('aria-label', '退出原型')
+  const closeIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  closeIcon.setAttribute('viewBox', '0 0 24 24')
+  closeIcon.setAttribute('width', '14')
+  closeIcon.setAttribute('height', '14')
+  closeIcon.setAttribute('aria-hidden', 'true')
+  closeIcon.innerHTML =
+    '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>'
+  close.append(closeIcon, document.createTextNode('退出原型'))
   frameHeader.append(frameTitle, close)
 
   const frameBody = document.createElement('div')

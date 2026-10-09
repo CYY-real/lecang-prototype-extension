@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "乐仓新客户端原型",
   "description": "在乐仓系统页面中展示新客户端原型。",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "permissions": ["tabs", "scripting", "activeTab", "storage"],
   "action": {
     "default_title": "乐仓原型",
