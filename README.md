@@ -42,6 +42,19 @@
 
 > 提示：`api-push.cjs` 通过 GitHub Git Data API 推送，不依赖 git push，token 只从环境变量读取、不会写进文件或仓库。
 
+## 换电脑 / 新电脑初始化（维护者）
+
+1. 安装 Git：https://git-scm.com/download/win
+2. 安装 Node.js（LTS 版）：https://nodejs.org （`api-push.cjs` 发布脚本依赖）
+3. 打开命令行，执行（公司网络 clone 报 SSL 证书错误时先执行第一条）：
+   ```powershell
+   git config --global http.sslverify false
+   git clone https://github.com/CYY-real/lecang-prototype-extension.git
+   ```
+4. `chrome://extensions` → 开发者模式 → 加载已解压 → 选择 clone 下来的 `dist` 文件夹
+5. 发布代码前，在 GitHub 生成新的 fine-grained PAT（Settings → Developer settings → Personal access tokens，权限：本仓库 Contents 读写），旧的轮换掉
+6. 发布：`$env:GITHUB_TOKEN="新token"; node api-push.cjs`（在仓库目录下运行）
+
 ## 自动重载原理
 
 `dist/content.js` 每 15 秒读取自身包内 `version.json` 并与 `chrome.storage.local` 中上次记录对比；发现内容变化后延迟 3 秒调用 `chrome.runtime.reload()` 重载整个扩展，使新代码立即生效。因此发布时改 `version.json` 是关键步骤。
