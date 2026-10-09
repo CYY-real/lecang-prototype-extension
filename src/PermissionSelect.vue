@@ -13,7 +13,7 @@ const props = withDefaults(defineProps<{
   placement?: 'down' | 'up'
   maxTag?: number
   dialog?: boolean
-}>(), { multiple: false, clearable: false, disabled: false, placement: 'down', maxTag: 1, dialog: false })
+}>(), { multiple: false, clearable: false, disabled: false, placement: 'down', maxTag: 999, dialog: false })
 const emit = defineEmits<{ 'update:modelValue': [value: Value[] | Value | null] }>()
 const root = ref<HTMLElement | null>(null)
 const searchInput = ref<HTMLInputElement | null>(null)
@@ -146,7 +146,7 @@ onBeforeUnmount(() => { document.removeEventListener('pointerdown', outside); wi
 
 <style scoped>
 .permission-control {
-  display: flex; align-items: center; gap: 4px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
   min-height: 30px; padding: 2px 8px;
   border: 1px solid #d5d9e0; border-radius: 4px;
   background: #fff; cursor: pointer; font-size: 13px;
