@@ -517,7 +517,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <div class="form-grid">
-          <div class="permission-field required"><span>角色：</span><PermissionSelect v-model="form.roleIds" :options="roleSelectOptions" multiple clearable dialog :disabled="isView" label="角色" :group-hints="{ 'WMS 仓库角色': '该分类下角色均需绑定仓库' }" /></div>
+          <div class="permission-field required"><span>角色：</span><PermissionSelect v-model="form.roleIds" :options="roleSelectOptions" multiple clearable dialog :disabled="isView" label="角色" :group-hints="{ 'WMS 仓库角色': '该分类下角色均需绑定WMS端仓库' }" /></div>
           <div v-if="showAreas" class="permission-field required"><span>绑定区域：</span><PermissionSelect v-model="form.saleAreaCodes" :options="areaOptions" multiple clearable :disabled="isView || areaLoading" label="绑定区域" /><small v-if="areaLoading" class="field-state">区域选项加载中…</small><small v-else-if="areaLoadError" class="field-state error">{{ areaLoadError }}</small></div>
           <div v-if="showWarehouses" class="permission-field required"><span>绑定WMS端仓库：</span><PermissionSelect v-model="form.warehouseList" :options="warehouseSelectOptions" multiple clearable dialog :disabled="isView" label="绑定WMS端仓库" /></div>
           <div class="permission-field"><span>数据权限：</span><PermissionSelect v-model="form.dataPermissionIds" :options="dataSelectOptions" multiple clearable dialog :disabled="isView" label="数据权限" /></div>
