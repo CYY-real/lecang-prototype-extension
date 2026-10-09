@@ -42,6 +42,9 @@ let mounted: MountedPrototype | null = null
 const SHOW_KEY = 'lecang-prototype:showPanel'
 let showPanel = false
 
+const LAUNCHER_POS_KEY = 'lecang-prototype:launcherPos'
+let launcherDragged = false
+
 function setOpen(open: boolean) {
   if (!mounted) return
   mounted.frameWrap.hidden = !open
@@ -52,10 +55,8 @@ function setOpen(open: boolean) {
 function positionFrame(frameWrap: HTMLElement) {
   const minLeft = 208
   const minTop = 44
-  const width = frameWrap.offsetWidth
-  const height = frameWrap.offsetHeight
-  const maxLeft = Math.max(minLeft, window.innerWidth - width - 8)
-  const maxTop = Math.max(minTop, window.innerHeight - height - 8)
+  const maxLeft = Math.max(minLeft, window.innerWidth - 360)
+  const maxTop = Math.max(minTop, window.innerHeight - 200)
   const left = Math.min(Math.max(minLeft, frameWrap.offsetLeft || minLeft), maxLeft)
   const top = Math.min(Math.max(minTop, frameWrap.offsetTop || minTop), maxTop)
   frameWrap.style.left = `${left}px`
@@ -82,6 +83,45 @@ function attachDrag(frameHeader: HTMLElement, frameWrap: HTMLElement) {
   frameHeader.addEventListener('pointercancel', stopDrag)
 }
 
+// P 悬浮按钮可拖拽：按住拖动到任意位置，松手后记住位置（刷新页面保持）
+function attachLauncherDrag(launcher: HTMLButtonElement) {
+  let grab: { x: number; y: number; left: number; top: number } | null = null
+  launcher.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return
+    launcherDragged = false
+    grab = { x: event.clientX, y: event.clientY, left: launcher.offsetLeft, top: launcher.offsetTop }
+    launcher.setPointerCapture(event.pointerId)
+  })
+  launcher.addEventListener('pointermove', (event) => {
+    if (!grab) return
+    const dx = event.clientX - grab.x
+    const dy = event.clientY - grab.y
+    if (!launcherDragged && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) launcherDragged = true
+    if (!launcherDragged) return
+    const left = Math.min(Math.max(0, grab.left + dx), window.innerWidth - launcher.offsetWidth)
+    const top = Math.min(Math.max(0, grab.top + dy), window.innerHeight - launcher.offsetHeight)
+    launcher.style.left = `${left}px`
+    launcher.style.top = `${top}px`
+    launcher.style.right = 'auto'
+    launcher.style.bottom = 'auto'
+  })
+  const stopDrag = () => {
+    if (!grab) return
+    if (launcherDragged) {
+      const left = launcher.style.left
+      const top = launcher.style.top
+      if (left && top) {
+        void chrome.storage.local.set({
+          [LAUNCHER_POS_KEY]: { left: parseInt(left, 10), top: parseInt(top, 10) },
+        })
+      }
+    }
+    grab = null
+  }
+  launcher.addEventListener('pointerup', stopDrag)
+  launcher.addEventListener('pointercancel', stopDrag)
+}
+
 function mountPrototype(route: PrototypeRoute) {
   const host = document.createElement('div')
   host.id = ROOT_ID
@@ -102,13 +142,10 @@ function mountPrototype(route: PrototypeRoute) {
     .launcher[hidden] { display: none; }
     .frame-wrap {
       position: fixed; z-index: 2147483645;
-      width: min(600px, calc(100vw - 224px));
-      left: 208px; top: 44px;
+      left: 208px; right: 0; top: 44px; bottom: 0;
       display: flex; flex-direction: column;
       background: #fff;
-      border: 1px solid #d7e2f0; border-radius: 4px;
-      box-shadow: 0 6px 18px rgba(15, 30, 51, 0.18);
-      max-height: calc(100vh - 88px);
+      border-left: 1px solid #d7e2f0;
     }
     .frame-wrap[hidden] { display: none; }
     .frame-header {
@@ -173,9 +210,26 @@ function mountPrototype(route: PrototypeRoute) {
 
   frameWrap.append(frameHeader, frameBody)
 
-  launcher.addEventListener('click', () => setOpen(true))
+  launcher.addEventListener('click', () => {
+    if (launcherDragged) {
+      launcherDragged = false
+      return
+    }
+    setOpen(true)
+  })
   close.addEventListener('click', () => setOpen(false))
   attachDrag(frameHeader, frameWrap)
+  attachLauncherDrag(launcher)
+  // 恢复上次拖拽保存的 P 按钮位置
+  void chrome.storage.local.get(LAUNCHER_POS_KEY).then((stored) => {
+    const pos = stored[LAUNCHER_POS_KEY] as { left?: number; top?: number } | undefined
+    if (pos && typeof pos.left === 'number' && typeof pos.top === 'number') {
+      launcher.style.left = `${pos.left}px`
+      launcher.style.top = `${pos.top}px`
+      launcher.style.right = 'auto'
+      launcher.style.bottom = 'auto'
+    }
+  })
   shadow.append(style, frameWrap, launcher)
   document.documentElement.appendChild(host)
   mounted = { id: route.id, host, frameWrap, launcher }
