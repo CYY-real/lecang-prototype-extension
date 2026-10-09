@@ -108,8 +108,8 @@ function mountPrototype(route: PrototypeRoute) {
       font: 12px Arial, "Microsoft YaHei", sans-serif; font-weight: 400; color: #1677ff;
     }
     .frame-close {
-      width: 36px; height: 32px; border: 1px solid #d5d9e0; border-radius: 4px; background: #fff; color: #526b8e;
-      font-size: 26px; cursor: pointer; padding: 0; line-height: 28px;
+      height: 32px; padding: 0 12px; border: 1px solid #d5d9e0; border-radius: 4px; background: #fff; color: #526b8e;
+      font-size: 13px; cursor: pointer; white-space: nowrap; line-height: 30px;
     }
     .frame-close:hover { color: #244570; }
     .frame-body {
@@ -139,8 +139,8 @@ function mountPrototype(route: PrototypeRoute) {
   const close = document.createElement('button')
   close.type = 'button'
   close.className = 'frame-close'
-  close.textContent = '×'
-  close.setAttribute('aria-label', '关闭原型')
+  close.textContent = '退出原型'
+  close.setAttribute('aria-label', '退出原型')
   frameHeader.append(frameTitle, close)
 
   const frameBody = document.createElement('div')
