@@ -180,13 +180,17 @@ async function searchCopyUsers() {
   const keyword = selectedCopyUser.value && copyKeyword.value === formatCopyUser(selectedCopyUser.value)
     ? selectedCopyUser.value.username
     : copyKeyword.value.trim()
+  if (!keyword) {
+    copyResults.value = []
+    copySearching.value = false
+    copyPanelOpen.value = false
+    return
+  }
   copySearching.value = true
   copyPanelOpen.value = true
   try {
     const request = (filters: Record<string, string>) => apiRequest<{ code: number; data: { list: UserRow[] } }>('POST', '/system/user/unperm/getListsByPage', { body: { pageNum: 1, pageSize: 8, ...filters } })
-    const responses = keyword
-      ? await Promise.all([request({ username: keyword }), request({ nickName: keyword })])
-      : [await request({})]
+    const responses = await Promise.all([request({ username: keyword }), request({ nickName: keyword }), request({ jobNumber: keyword })])
     if (requestSeq !== copySearchSeq) return
     const merged = new Map<number, UserRow>()
     for (const response of responses) {
@@ -501,7 +505,7 @@ onBeforeUnmount(() => {
             <div v-if="!isView" class="copy-permission-entry">
               <span class="copy-purpose">复制已有用户权限：</span>
               <div ref="copySearchRoot" class="copy-search-head" :class="{ 'has-copy': copiedFromUser, 'is-open': copyPanelOpen }">
-                <input v-if="!copiedFromUser" v-model="copyKeyword" placeholder="搜索用户名或姓名" @input="onCopyKeywordInput" @click="toggleCopyPanel" :disabled="isView">
+                <input v-if="!copiedFromUser" v-model="copyKeyword" placeholder="搜索用户名、姓名或工号" @input="onCopyKeywordInput" @click="toggleCopyPanel" :disabled="isView">
                 <div v-else class="copy-selected-display" :title="copiedFromUser" @click="toggleCopyPanel">
                   <span>{{ copiedFromUser }}</span>
                   <button type="button" class="copy-selection-clear" title="清空已选用户" aria-label="清空已选用户" @click.stop="clearSelectedCopyUser" :disabled="isView">×</button>
@@ -510,15 +514,15 @@ onBeforeUnmount(() => {
                 <div v-if="copyPanelOpen" class="copy-panel">
                   <div class="copy-guide">选择一个用户，将其角色和数据权限复制到当前用户</div>
                   <div v-if="copySearching" class="copy-empty">搜索中…</div>
-                  <div v-else-if="!copyResults.length" class="copy-empty">未找到用户，请更换用户名或姓名</div>
-                  <button v-for="u in copyResults" v-else :key="u.accountId" type="button" @mousedown.prevent @click="selectCopyUser(u)"><strong>{{ u.nickName || '-' }}</strong><span>{{ u.username }}</span></button>
+                  <div v-else-if="!copyResults.length" class="copy-empty">未找到用户，请更换用户名、姓名或工号</div>
+                  <button v-for="u in copyResults" v-else :key="u.accountId" type="button" @mousedown.prevent @click="selectCopyUser(u)"><strong>{{ u.nickName || '-' }}</strong><span>{{ u.username }}<template v-if="u.jobNumber"> · 工号：{{ u.jobNumber }}</template></span></button>
                 </div>
               </div>
             </div>
           </div>
           <div class="form-grid">
           <div class="permission-field required"><span>角色：</span><PermissionSelect v-model="form.roleIds" :options="roleSelectOptions" multiple clearable dialog :disabled="isView" label="角色" :group-hints="{ 'WMS 仓库角色': '该分类下角色均需绑定WMS端仓库' }" /></div>
-          <div v-if="showAreas" class="permission-field required"><span>绑定区域：</span><PermissionSelect v-model="form.saleAreaCodes" :options="areaOptions" multiple clearable :disabled="isView || areaLoading" label="绑定区域" /><small v-if="areaLoading" class="field-state">区域选项加载中…</small><small v-else-if="areaLoadError" class="field-state error">{{ areaLoadError }}</small></div>
+          <div v-if="showAreas" class="permission-field required"><span>绑定区域：<small class="field-tip">限定销售业务范围及可分配客户的区域。</small></span><PermissionSelect v-model="form.saleAreaCodes" :options="areaOptions" multiple clearable :disabled="isView || areaLoading" label="绑定区域" /><small v-if="areaLoading" class="field-state">区域选项加载中…</small><small v-else-if="areaLoadError" class="field-state error">{{ areaLoadError }}</small></div>
           <div v-if="showWarehouses" class="permission-field required"><span>绑定WMS端仓库：</span><PermissionSelect v-model="form.warehouseList" :options="warehouseSelectOptions" multiple clearable dialog :disabled="isView" label="绑定WMS端仓库" /></div>
           <div class="permission-field"><span>数据权限：</span><PermissionSelect v-model="form.dataPermissionIds" :options="dataSelectOptions" multiple clearable dialog :disabled="isView" label="数据权限" /></div>
           <div class="permission-field"><span>NEW数据权限：</span><PermissionSelect :model-value="form.groupId" :options="groupSelectOptions" clearable placement="up" :disabled="isView" label="NEW数据权限" @update:model-value="form.groupId = $event as number | null" /></div>
